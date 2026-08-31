@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #071018;
+  --ink: #eef6fb;
+  --muted: #8aa0b3;
+  --navy: #14e0c4;
+  --line: #1b3a4c;
+  --saving: #3ee0c4;
+  --extra: #ff7a4a;
+  --even: #9db4c7;
+  --panel: #0b1a24;
+  --key: #102230;
+  --glow-teal: 0 0 10px rgba(20, 224, 196, 0.55), 0 0 24px rgba(20, 224, 196, 0.28);
+  --glow-coral: 0 0 10px rgba(255, 122, 74, 0.55), 0 0 24px rgba(255, 122, 74, 0.25);
+}
+
+html,
+body {
+  min-height: 100%;
+  min-height: 100dvh;
+  background:
+    radial-gradient(900px 420px at 50% -8%, rgba(20, 224, 196, 0.16), transparent 55%),
+    radial-gradient(700px 380px at 100% 100%, rgba(255, 122, 74, 0.1), transparent 50%),
+    var(--paper);
+  color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+input {
+  touch-action: manipulation;
+}
+
+input,
+textarea,
+select {
+  font-size: 16px;
+}
+
+:focus-visible {
+  outline: 2px solid #14e0c4;
+  outline-offset: 2px;
+}
+
+.btn-key {
+  min-height: 3rem;
+  border-radius: 0.85rem;
+  border: 1px solid #245066;
+  background: linear-gradient(180deg, #163044 0%, #102230 100%);
+  color: var(--ink);
+  font-family: ui-monospace, monospace;
+  font-size: 1.15rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 0 1px rgba(20, 224, 196, 0.08);
+}
+
+.btn-key:active {
+  transform: translateY(1px);
+  box-shadow: var(--glow-teal);
+}
+
+.btn-action {
+  min-height: 2.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid #2a5a70;
+  background: #102230;
+  color: var(--ink);
+  font-size: 0.875rem;
+  box-shadow: 0 0 12px rgba(20, 224, 196, 0.12);
+}
+
+.btn-action:disabled {
+  opacity: 0.35;
+}
+
+.btn-plus,
+.btn-minus,
+.btn-add {
+  min-height: 3rem;
+  border-radius: 0.85rem;
+  font-weight: 700;
+}
+
+.btn-plus {
+  border: 1px solid #14e0c4;
+  background: #0d2a32;
+  color: #14e0c4;
+}
+
+.btn-plus.is-on {
+  background: #14e0c4;
+  color: #071018;
+  box-shadow: var(--glow-teal);
+}
+
+.btn-minus {
+  border: 1px solid #ff7a4a;
+  background: #2a1610;
+  color: #ff7a4a;
+}
+
+.btn-minus.is-on {
+  background: #ff7a4a;
+  color: #071018;
+  box-shadow: var(--glow-coral);
+}
+
+.btn-add {
+  border: 1px solid #14e0c4;
+  background: #14e0c4;
+  color: #071018;
+  box-shadow: var(--glow-teal);
+}
+
+.display-glow {
+  text-shadow: 0 0 12px rgba(20, 224, 196, 0.55), 0 0 28px rgba(20, 224, 196, 0.25);
+}
+
+.field-glow {
+  background: #08141c;
+  border: 1px solid #245066;
+  color: var(--ink);
+}
+
+.field-glow:focus,
+.field-on {
+  border-color: #14e0c4;
+  box-shadow: var(--glow-teal);
+}
+
+.panel-glow {
+  background: linear-gradient(180deg, #102838 0%, #0b1a24 100%);
+  border: 1px solid #1f4a5c;
+  box-shadow: 0 0 24px rgba(20, 224, 196, 0.12);
+}
