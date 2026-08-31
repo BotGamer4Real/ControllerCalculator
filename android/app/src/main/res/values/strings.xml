@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Duty Pad</string>
+    <string name="title_activity_main">Duty Pad</string>
+    <string name="package_name">com.botgamer4real.controllercalculator</string>
+    <string name="custom_url_scheme">com.botgamer4real.controllercalculator</string>
+</resources>

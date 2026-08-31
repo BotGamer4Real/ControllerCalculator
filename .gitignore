@@ -9,3 +9,18 @@ npm-debug.log*
 .vercel
 *.tsbuildinfo
 next-env.d.ts
+
+# android / capacitor
+android/.idea/
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android/captures/
+android/app/release/
+*.apk
+*.aab
+*.keystore
+*.jks
+android/keystore.properties
+android/upload-keystore.jks
