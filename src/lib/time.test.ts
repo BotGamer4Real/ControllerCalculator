@@ -54,12 +54,14 @@ describe("format and delta", () => {
   it("simple saving 10:00 vs 6:49", () => {
     const delta = signedDelta(10 * 60, 6 * 60 + 49);
     assert.equal(delta?.kind, "saving");
+    assert.equal(delta?.label, "Amount Saved");
     assert.equal(delta?.magnitudeHmm, "3:11");
   });
 
   it("extra is valid", () => {
     const delta = signedDelta(8 * 60, 8 * 60 + 35);
     assert.equal(delta?.kind, "extra");
+    assert.equal(delta?.label, "Additional Cost");
     assert.equal(delta?.magnitudeHmm, "0:35");
   });
 

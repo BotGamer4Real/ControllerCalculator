@@ -181,6 +181,10 @@ export function PadApp() {
       onOperator(key === "+" ? 1 : -1);
       return;
     }
+    if (key === "=") {
+      onCommit();
+      return;
+    }
     if (key === ":") return;
     setDraft(activeField, liveHmm(current + key));
   }
@@ -286,7 +290,7 @@ export function PadApp() {
                     onOperator(-1);
                     return;
                   }
-                  if (event.key === "Enter") {
+                  if (event.key === "Enter" || event.key === "=") {
                     event.preventDefault();
                     onCommit();
                   }
@@ -314,8 +318,8 @@ export function PadApp() {
             >
               −
             </button>
-            <button type="button" aria-label="Add" onClick={onCommit} className="btn-add min-w-16 px-4 text-base">
-              Add
+            <button type="button" aria-label="Equals" onClick={onCommit} className="btn-add min-w-16 px-4 text-2xl">
+              =
             </button>
           </div>
         </div>
@@ -326,32 +330,38 @@ export function PadApp() {
       </div>
 
       <section className="panel-glow mt-3 shrink-0 rounded-2xl p-3" aria-live="polite">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--navy)]">Pay total</p>
-        <p className="display-glow font-mono text-4xl font-semibold tabular-nums sm:text-5xl" aria-label="Pay total">
-          {formatHmm(total)}
-        </p>
-        {pad.current.dutyMinutes !== null ? (
-          <p className="mt-1 text-sm text-[var(--muted)]">Duty Pay {formatHmm(pad.current.dutyMinutes)}</p>
-        ) : (
-          <p className="mt-1 text-sm text-[var(--muted)]">No duty pay — sum only</p>
-        )}
-        {delta ? (
-          <p
-            className={`mt-1 text-xl font-semibold sm:text-2xl ${
-              delta.kind === "saving"
-                ? "text-[var(--saving)]"
-                : delta.kind === "extra"
-                  ? "text-[var(--extra)]"
-                  : "text-[var(--even)]"
-            }`}
-            aria-label="Saving / Extra / even"
-          >
-            {delta.label} {delta.kind === "even" ? "0:00" : delta.magnitudeHmm}
-            <span className="ml-2 text-base font-medium text-[var(--muted)]">
-              ({delta.kind === "even" ? "0:00" : delta.signedHmm})
-            </span>
-          </p>
-        ) : null}
+        <dl className="space-y-1 text-base">
+          {pad.current.dutyMinutes !== null ? (
+            <div className="flex items-baseline justify-between gap-3">
+              <dt className="text-[var(--muted)]">Duty Pay</dt>
+              <dd className="font-mono text-xl tabular-nums">{formatHmm(pad.current.dutyMinutes)}</dd>
+            </div>
+          ) : (
+            <p className="text-sm text-[var(--muted)]">No Duty Pay — paid total only</p>
+          )}
+          <div className="flex items-baseline justify-between gap-3">
+            <dt className="text-[var(--muted)]">Paid</dt>
+            <dd className="display-glow font-mono text-4xl font-semibold tabular-nums" aria-label="Paid">
+              {formatHmm(total)}
+            </dd>
+          </div>
+          {delta ? (
+            <div
+              className={`flex items-baseline justify-between gap-3 ${
+                delta.kind === "saving"
+                  ? "text-[var(--saving)]"
+                  : delta.kind === "extra"
+                    ? "text-[var(--extra)]"
+                    : "text-[var(--even)]"
+              }`}
+            >
+              <dt className="font-semibold" aria-label="Amount Saved or Additional Cost">
+                {delta.label}
+              </dt>
+              <dd className="font-mono text-2xl font-semibold tabular-nums">{delta.magnitudeHmm}</dd>
+            </div>
+          ) : null}
+        </dl>
       </section>
 
       <div className="mt-3 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-3">
@@ -463,8 +473,8 @@ export function PadApp() {
           >
             −
           </button>
-          <button type="button" aria-label="Add" onClick={onCommit} className="btn-add text-base">
-            Add
+          <button type="button" aria-label="Equals" onClick={onCommit} className="btn-add text-2xl">
+            =
           </button>
         </div>
         <div className="grid grid-cols-3 gap-2">

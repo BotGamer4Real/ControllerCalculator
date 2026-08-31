@@ -3,8 +3,8 @@ import { workingDelta } from "./working";
 
 export const ACHIEVEMENTS = [
   { id: "first_working", title: "First working", detail: "A working with at least one pay piece." },
-  { id: "first_saving", title: "First saving shown", detail: "A duty working that shows Saving." },
-  { id: "first_extra", title: "First Extra shown", detail: "Extra is valid — paid more than the duty." },
+  { id: "first_saving", title: "First Amount Saved", detail: "Duty Pay minus paid shows a saving." },
+  { id: "first_extra", title: "First Additional Cost", detail: "Paid more than Duty Pay — valid, always shown." },
   { id: "first_split", title: "First split", detail: "Three or more pay pieces in one working." },
   { id: "history_filled", title: "History filled", detail: "Ten lifetime workings." },
   { id: "lifetime_50", title: "50 lifetime workings", detail: "Fifty completed workings." },

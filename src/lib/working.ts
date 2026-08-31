@@ -180,11 +180,11 @@ export function formatCopy(working: Working): string {
   const lines = [
     "Duty Pad",
     "",
-    `Duty: ${working.dutyMinutes === null ? "none" : formatHmm(working.dutyMinutes)}`,
-    `Pay total: ${formatHmm(payTotal(working))}`,
+    `Duty Pay: ${working.dutyMinutes === null ? "none" : formatHmm(working.dutyMinutes)}`,
+    `Paid: ${formatHmm(payTotal(working))}`,
   ];
   if (delta) {
-    lines.push(delta.kind === "even" ? "even: 0:00" : `${delta.label}: ${delta.magnitudeHmm}`);
+    lines.push(`${delta.label}: ${delta.magnitudeHmm}`);
   } else {
     lines.push("no duty");
   }
@@ -206,8 +206,8 @@ export function historyLabel(working: Working): {
     pay: formatHmm(payTotal(working)),
     delta: delta
       ? delta.kind === "even"
-        ? "even"
-        : `${delta.kind === "saving" ? "S" : "E"} ${delta.magnitudeHmm}`
+        ? "Even"
+        : `${delta.kind === "saving" ? "Saved" : "Cost"} ${delta.magnitudeHmm}`
       : "—",
     pieces: working.pieces.length,
   };

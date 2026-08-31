@@ -15,25 +15,24 @@ export default function GuidePage() {
       <section className="mt-8 space-y-3 text-sm leading-6">
         <h2 className="text-lg font-semibold">What it is (and is not)</h2>
         <p>
-          Duty Pad adds and subtracts paid hours in H:MM and, if you enter a duty, shows Saving, Extra, or even. It is
-          not a timesheet, overtime engine, payroll engine, or drivers’ hours tool.
+          Duty Pad totals what you actually paid the driver, then subtracts that from Duty Pay. The difference is Amount
+          Saved or Additional Cost. It is not a timesheet, overtime engine, payroll engine, or drivers’ hours tool.
         </p>
       </section>
 
       <section className="mt-8 space-y-3 text-sm leading-6">
         <h2 className="text-lg font-semibold">A working</h2>
         <p>
-          Optional Duty Pay + pay pieces in order + a live pay total. If Duty Pay is set, delta is duty minus pay.
-          Positive is Saving. Negative is Extra (valid, always shown). Zero is even.
+          Optional Duty Pay (what the duty was worth) minus Paid (what you paid the driver). Positive is Amount Saved.
+          Negative is Additional Cost (valid, always shown). Zero is Even.
         </p>
       </section>
 
       <section className="mt-8 space-y-3 text-sm leading-6">
         <h2 className="text-lg font-semibold">How to add and subtract</h2>
         <p>
-          Type a pay time, then + or −. Plus and minus both commit the number you just typed and set the sign for the
-          next piece — so 10:00 + 4:00 − 1:30 is one working and the pay total is 12:30. Enter or Add commits the last
-          piece with the current sign. The tape shows each piece with + or − and the running subtotal. Empty commit is a
+          Type a pay time, then + or −. Plus and minus commit that piece and set the sign for the next one — so 10:00 +
+          4:00 − 1:30 is one working and Paid is 12:30. Press = (or Enter) to finish the last piece. Empty commit is a
           visible fail. Undo piece, Clear pieces (asks first), and New working sit with the tape.
         </p>
         <p>
@@ -43,10 +42,10 @@ export default function GuidePage() {
       </section>
 
       <section className="mt-8 space-y-3 text-sm leading-6">
-        <h2 className="text-lg font-semibold">Saving, Extra, and even</h2>
+        <h2 className="text-lg font-semibold">Amount Saved and Additional Cost</h2>
         <p>
-          Extra means paid more than the Duty Pay. That is a normal result, not an error, and it is never hidden or
-          clamped to zero.
+          Amount Saved means Duty Pay was more than you paid. Additional Cost means you paid more than Duty Pay. That is
+          a normal result, not an error, and it is never hidden or clamped to zero.
         </p>
       </section>
 
@@ -78,14 +77,15 @@ export default function GuidePage() {
       <section className="mt-8 space-y-3 text-sm leading-6">
         <h2 className="text-lg font-semibold">Three typical workings</h2>
         <p>
-          <strong>Simple saving.</strong> Duty Pay 10:00, pay 6:49 → pay 6:49, Saving 3:11.
+          <strong>Amount Saved.</strong> Duty Pay 10:00, Paid 6:49 → Amount Saved 3:11.
         </p>
         <p>
-          <strong>Split duty.</strong> Duty Pay 12:00, pieces 2:10 + 1:45 + 0:30 + 3:20 + 1:05 + 1:40 → pay 10:30, Saving
-          1:30.
+          <strong>Split duty.</strong> Duty Pay 12:00, pieces 2:10 + 1:45 + 0:30 + 3:20 + 1:05 + 1:40 → Paid 10:30, Amount
+          Saved 1:30.
         </p>
         <p>
-          <strong>Extra.</strong> Duty Pay 8:00, pieces 5:20 + 3:15 → pay 8:35, Extra 0:35 — shown, not an error.
+          <strong>Additional Cost.</strong> Duty Pay 8:00, pieces 5:20 + 3:15 → Paid 8:35, Additional Cost 0:35 — shown,
+          not an error.
         </p>
       </section>
 

@@ -93,10 +93,10 @@ export function signedDelta(dutyMinutes: number | null, payMinutes: number): Del
   const minutes = dutyMinutes - payMinutes;
   const magnitudeHmm = formatHmm(Math.abs(minutes));
   if (minutes > 0) {
-    return { kind: "saving", minutes, label: "Saving", signedHmm: `+${magnitudeHmm}`, magnitudeHmm };
+    return { kind: "saving", minutes, label: "Amount Saved", signedHmm: `+${magnitudeHmm}`, magnitudeHmm };
   }
   if (minutes < 0) {
-    return { kind: "extra", minutes, label: "Extra", signedHmm: `-${magnitudeHmm}`, magnitudeHmm };
+    return { kind: "extra", minutes, label: "Additional Cost", signedHmm: `-${magnitudeHmm}`, magnitudeHmm };
   }
-  return { kind: "even", minutes: 0, label: "even", signedHmm: "0:00", magnitudeHmm: "0:00" };
+  return { kind: "even", minutes: 0, label: "Even", signedHmm: "0:00", magnitudeHmm: "0:00" };
 }

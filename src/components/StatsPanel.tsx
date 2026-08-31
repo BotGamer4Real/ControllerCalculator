@@ -39,11 +39,11 @@ export function StatsPanel({
             <dd className="font-mono text-xl">{stats.records.mostPieces}</dd>
           </div>
           <div className="rounded-xl border border-[var(--line)] bg-[#08141c] p-3">
-            <dt className="text-[var(--muted)]">Largest saving</dt>
+            <dt className="text-[var(--muted)]">Largest Amount Saved</dt>
             <dd className="font-mono text-xl">{formatHmm(stats.records.largestSavingMinutes)}</dd>
           </div>
           <div className="col-span-2 rounded-xl border border-[var(--line)] bg-[#08141c] p-3">
-            <dt className="text-[var(--muted)]">Largest extra</dt>
+            <dt className="text-[var(--muted)]">Largest Additional Cost</dt>
             <dd className="font-mono text-xl">{formatHmm(stats.records.largestExtraMinutes)}</dd>
           </div>
         </dl>

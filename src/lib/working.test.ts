@@ -136,8 +136,8 @@ describe("history", () => {
     assert.equal(pad.current.dutyMinutes, 8 * 60);
     assert.notEqual(pad.current.id, sourceId);
     const text = formatCopy(pad.current);
-    assert.match(text, /Duty: 8:00/);
-    assert.match(text, /Pay total: 3:00/);
+    assert.match(text, /Duty Pay: 8:00/);
+    assert.match(text, /Paid: 3:00/);
     assert.match(text, /\+ 3:00/);
   });
 });
