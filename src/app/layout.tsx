@@ -5,7 +5,13 @@ export const metadata: Metadata = {
   title: "Duty Pad",
   description: "Add paid hours in H:MM and compare them to a duty — saving or extra, by the minute.",
   manifest: "/manifest.webmanifest",
-  icons: { icon: "/icon.svg" },
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/icon-192.png",
+  },
 };
 
 export const viewport: Viewport = {
