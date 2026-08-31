@@ -73,6 +73,42 @@ select {
   opacity: 0.35;
 }
 
+.btn-loud-clear,
+.btn-loud-new {
+  min-height: 3.6rem;
+  border-radius: 1rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.btn-loud-clear {
+  border: 2px solid #ff7a4a;
+  background: linear-gradient(180deg, #5a2418 0%, #2a100c 100%);
+  color: #ffc4a8;
+  box-shadow: 0 0 18px rgba(255, 122, 74, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.btn-loud-new {
+  border: 2px solid #14e0c4;
+  background: linear-gradient(180deg, #1a4a48 0%, #0d2a32 100%);
+  color: #b8fff4;
+  box-shadow: 0 0 18px rgba(20, 224, 196, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.btn-reset {
+  min-height: 3rem;
+  border-radius: 0.85rem;
+  border: 1px solid #ff7a4a;
+  background: linear-gradient(180deg, #3a1a12 0%, #102230 100%);
+  color: #ffb089;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 0 12px rgba(255, 122, 74, 0.35);
+}
+
 .btn-plus,
 .btn-minus,
 .btn-add {

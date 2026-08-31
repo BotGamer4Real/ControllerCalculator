@@ -88,15 +88,30 @@ export type Delta = {
   magnitudeHmm: string;
 };
 
-export function signedDelta(dutyMinutes: number | null, payMinutes: number): Delta | null {
-  if (dutyMinutes === null) return null;
-  const minutes = dutyMinutes - payMinutes;
-  const magnitudeHmm = formatHmm(Math.abs(minutes));
-  if (minutes > 0) {
-    return { kind: "saving", minutes, label: "Amount Saved", signedHmm: `+${magnitudeHmm}`, magnitudeHmm };
+export function resultFromTotal(totalMinutes: number): Delta {
+  const magnitudeHmm = formatHmm(Math.abs(totalMinutes));
+  if (totalMinutes > 0) {
+    return {
+      kind: "saving",
+      minutes: totalMinutes,
+      label: "Amount Saved",
+      signedHmm: `+${magnitudeHmm}`,
+      magnitudeHmm,
+    };
   }
-  if (minutes < 0) {
-    return { kind: "extra", minutes, label: "Additional Cost", signedHmm: `-${magnitudeHmm}`, magnitudeHmm };
+  if (totalMinutes < 0) {
+    return {
+      kind: "extra",
+      minutes: totalMinutes,
+      label: "Additional Cost",
+      signedHmm: `-${magnitudeHmm}`,
+      magnitudeHmm,
+    };
   }
   return { kind: "even", minutes: 0, label: "Even", signedHmm: "0:00", magnitudeHmm: "0:00" };
+}
+
+export function signedDelta(dutyMinutes: number | null, payMinutes: number): Delta | null {
+  if (dutyMinutes === null) return null;
+  return resultFromTotal(dutyMinutes - payMinutes);
 }

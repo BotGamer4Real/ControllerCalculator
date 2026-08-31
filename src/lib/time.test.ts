@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { backspaceHmm, formatHmm, liveHmm, parseHmm, signedDelta } from "./time";
+import { backspaceHmm, formatHmm, liveHmm, parseHmm, resultFromTotal } from "./time";
 
 describe("parseHmm", () => {
   it("accepts 6:49, 06:49, 649, and 6.49 as a colon alias", () => {
@@ -51,21 +51,17 @@ describe("format and delta", () => {
     assert.equal(formatHmm(27 * 60 + 15), "27:15");
   });
 
-  it("simple saving 10:00 vs 6:49", () => {
-    const delta = signedDelta(10 * 60, 6 * 60 + 49);
-    assert.equal(delta?.kind, "saving");
-    assert.equal(delta?.label, "Amount Saved");
-    assert.equal(delta?.magnitudeHmm, "3:11");
+  it("positive remaining is Amount Saved", () => {
+    const delta = resultFromTotal(3 * 60 + 11);
+    assert.equal(delta.kind, "saving");
+    assert.equal(delta.label, "Amount Saved");
+    assert.equal(delta.magnitudeHmm, "3:11");
   });
 
-  it("extra is valid", () => {
-    const delta = signedDelta(8 * 60, 8 * 60 + 35);
-    assert.equal(delta?.kind, "extra");
-    assert.equal(delta?.label, "Additional Cost");
-    assert.equal(delta?.magnitudeHmm, "0:35");
-  });
-
-  it("hides delta when duty is empty", () => {
-    assert.equal(signedDelta(null, 210), null);
+  it("negative remaining is Additional Cost", () => {
+    const delta = resultFromTotal(-(35));
+    assert.equal(delta.kind, "extra");
+    assert.equal(delta.label, "Additional Cost");
+    assert.equal(delta.magnitudeHmm, "0:35");
   });
 });

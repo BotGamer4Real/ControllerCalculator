@@ -1,4 +1,4 @@
-import { formatHmm, parseHmm, signedDelta, sumMinutes, type Delta } from "./time";
+import { formatHmm, parseHmm, resultFromTotal, signedDelta, sumMinutes, type Delta } from "./time";
 
 export const HISTORY_LIMIT = 3;
 export const PIECE_SOFT_CAP = 20;
@@ -40,6 +40,10 @@ export function emptyPad(at = new Date()): PadSnapshot {
 
 export function payTotal(working: Working): number {
   return sumMinutes(working.pieces);
+}
+
+export function workingResult(working: Working): Delta {
+  return resultFromTotal(payTotal(working));
 }
 
 export function workingDelta(working: Working): Delta | null {
@@ -176,18 +180,11 @@ export function sameAgain(pad: PadSnapshot, historyId: string, at = new Date()):
 }
 
 export function formatCopy(working: Working): string {
-  const delta = workingDelta(working);
   const lines = [
     "Duty Pad",
     "",
-    `Duty Pay: ${working.dutyMinutes === null ? "none" : formatHmm(working.dutyMinutes)}`,
-    `Paid: ${formatHmm(payTotal(working))}`,
+    `${workingResult(working).label}: ${formatHmm(payTotal(working))}`,
   ];
-  if (delta) {
-    lines.push(`${delta.label}: ${delta.magnitudeHmm}`);
-  } else {
-    lines.push("no duty");
-  }
   lines.push("", "Pieces");
   if (working.pieces.length === 0) lines.push("(none)");
   else working.pieces.forEach((piece, index) => lines.push(`${index + 1}. ${formatTapePiece(piece)}`));
@@ -200,15 +197,14 @@ export function historyLabel(working: Working): {
   delta: string;
   pieces: number;
 } {
-  const delta = workingDelta(working);
+  const delta = workingResult(working);
   return {
-    duty: working.dutyMinutes === null ? "sum" : formatHmm(working.dutyMinutes),
+    duty: "sum",
     pay: formatHmm(payTotal(working)),
-    delta: delta
-      ? delta.kind === "even"
+    delta:
+      delta.kind === "even"
         ? "Even"
-        : `${delta.kind === "saving" ? "Saved" : "Cost"} ${delta.magnitudeHmm}`
-      : "—",
+        : `${delta.kind === "saving" ? "Saved" : "Cost"} ${delta.magnitudeHmm}`,
     pieces: working.pieces.length,
   };
 }

@@ -1,5 +1,5 @@
 import type { Working } from "./working";
-import { workingDelta } from "./working";
+import { payTotal, workingResult } from "./working";
 
 export const ACHIEVEMENTS = [
   { id: "first_working", title: "First working", detail: "A working with at least one pay piece." },
@@ -69,24 +69,25 @@ export function applyWorkingToStats(stats: Stats, working: Working, at = new Dat
       activeDays,
     };
   }
-  const delta = workingDelta(working);
+  const delta = workingResult(working);
+  const total = payTotal(working);
   next = {
     ...next,
     records: {
       mostPieces: Math.max(next.records.mostPieces, working.pieces.length),
       largestSavingMinutes:
-        delta?.kind === "saving"
-          ? Math.max(next.records.largestSavingMinutes, delta.minutes)
+        delta.kind === "saving"
+          ? Math.max(next.records.largestSavingMinutes, total)
           : next.records.largestSavingMinutes,
       largestExtraMinutes:
-        delta?.kind === "extra"
-          ? Math.max(next.records.largestExtraMinutes, Math.abs(delta.minutes))
+        delta.kind === "extra"
+          ? Math.max(next.records.largestExtraMinutes, Math.abs(total))
           : next.records.largestExtraMinutes,
     },
   };
   next = unlock(next, "first_working", at);
-  if (delta?.kind === "saving") next = unlock(next, "first_saving", at);
-  if (delta?.kind === "extra") next = unlock(next, "first_extra", at);
+  if (delta.kind === "saving") next = unlock(next, "first_saving", at);
+  if (delta.kind === "extra") next = unlock(next, "first_extra", at);
   if (working.pieces.length >= 3) next = unlock(next, "first_split", at);
   if (next.lifetimeWorkings >= 10) next = unlock(next, "history_filled", at);
   if (next.lifetimeWorkings >= 50) next = unlock(next, "lifetime_50", at);

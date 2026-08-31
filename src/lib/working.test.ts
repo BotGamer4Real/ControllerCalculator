@@ -4,7 +4,6 @@ import { formatHmm } from "./time";
 import {
   HISTORY_LIMIT,
   addPiece,
-  confirmDuty,
   emptyPad,
   formatCopy,
   newWorking,
@@ -12,18 +11,12 @@ import {
   recoverWorking,
   sameAgain,
   subtractPiece,
-  workingDelta,
+  workingResult,
   type PadSnapshot,
 } from "./working";
 
 function add(pad: PadSnapshot, raw: string): PadSnapshot {
   const result = addPiece(pad, raw);
-  if (!result.ok) throw new Error(result.error);
-  return result.pad;
-}
-
-function duty(pad: PadSnapshot, raw: string): PadSnapshot {
-  const result = confirmDuty(pad, raw);
   if (!result.ok) throw new Error(result.error);
   return result.pad;
 }
@@ -35,54 +28,36 @@ function subtract(pad: PadSnapshot, raw: string): PadSnapshot {
 }
 
 describe("golden cases", () => {
-  it("simple saving", () => {
-    let pad = duty(emptyPad(), "10:00");
-    pad = add(pad, "6:49");
-    assert.equal(formatHmm(payTotal(pad.current)), "6:49");
-    assert.equal(workingDelta(pad.current)?.kind, "saving");
-    assert.equal(workingDelta(pad.current)?.magnitudeHmm, "3:11");
+  it("simple saving: 10:00 − 6:49 → Amount Saved 3:11", () => {
+    let pad = add(emptyPad(), "10:00");
+    pad = subtract(pad, "6:49");
+    assert.equal(formatHmm(payTotal(pad.current)), "3:11");
+    assert.equal(workingResult(pad.current).kind, "saving");
+    assert.equal(workingResult(pad.current).label, "Amount Saved");
   });
 
-  it("split 12:00", () => {
-    let pad = duty(emptyPad(), "12:00");
-    for (const piece of ["2:10", "1:45", "0:30", "3:20", "1:05", "1:40"]) pad = add(pad, piece);
-    assert.equal(formatHmm(payTotal(pad.current)), "10:30");
-    assert.equal(workingDelta(pad.current)?.magnitudeHmm, "1:30");
+  it("split 12:00 minus six pieces", () => {
+    let pad = add(emptyPad(), "12:00");
+    for (const piece of ["2:10", "1:45", "0:30", "3:20", "1:05", "1:40"]) pad = subtract(pad, piece);
+    assert.equal(formatHmm(payTotal(pad.current)), "1:30");
+    assert.equal(workingResult(pad.current).kind, "saving");
   });
 
-  it("extra 8:00 vs 5:20 + 3:15", () => {
-    let pad = duty(emptyPad(), "8:00");
-    pad = add(pad, "5:20");
-    pad = add(pad, "3:15");
-    assert.equal(formatHmm(payTotal(pad.current)), "8:35");
-    assert.equal(workingDelta(pad.current)?.kind, "extra");
-    assert.equal(workingDelta(pad.current)?.magnitudeHmm, "0:35");
+  it("additional cost 8:00 − 5:20 − 3:15", () => {
+    let pad = add(emptyPad(), "8:00");
+    pad = subtract(pad, "5:20");
+    pad = subtract(pad, "3:15");
+    assert.equal(formatHmm(payTotal(pad.current)), "-0:35");
+    assert.equal(workingResult(pad.current).kind, "extra");
+    assert.equal(workingResult(pad.current).label, "Additional Cost");
+    assert.equal(workingResult(pad.current).magnitudeHmm, "0:35");
   });
 
-  it("sum only hides delta", () => {
-    let pad = add(emptyPad(), "1:20");
-    pad = add(pad, "2:10");
-    assert.equal(formatHmm(payTotal(pad.current)), "3:30");
-    assert.equal(workingDelta(pad.current), null);
-  });
-
-  it("colon alias, empty add fail, full-duty saving", () => {
-    let pad = duty(emptyPad(), "10:00");
-    pad = add(pad, "6.49");
-    assert.equal(formatHmm(payTotal(pad.current)), "6:49");
+  it("colon alias and empty add fail", () => {
+    let pad = add(emptyPad(), "10:00");
+    pad = subtract(pad, "6.49");
+    assert.equal(formatHmm(payTotal(pad.current)), "3:11");
     assert.equal(addPiece(emptyPad(), "").ok, false);
-    const zero = duty(emptyPad(), "10:00");
-    assert.equal(workingDelta(zero.current)?.magnitudeHmm, "10:00");
-  });
-
-  it("subtracts a piece from the running pay total", () => {
-    let pad = duty(emptyPad(), "10:00");
-    pad = add(pad, "6:49");
-    pad = subtract(pad, "0:30");
-    assert.equal(formatHmm(payTotal(pad.current)), "6:19");
-    assert.equal(workingDelta(pad.current)?.kind, "saving");
-    assert.equal(workingDelta(pad.current)?.magnitudeHmm, "3:41");
-    assert.match(formatCopy(pad.current), /− 0:30/);
   });
 
   it("empty subtract is a visible fail", () => {
@@ -93,17 +68,17 @@ describe("golden cases", () => {
 
 describe("history", () => {
   it("recover writes a new row after edits", () => {
-    let pad = duty(emptyPad(), "10:00");
-    pad = add(pad, "6:49");
+    let pad = add(emptyPad(), "10:00");
+    pad = subtract(pad, "6:49");
     const originalId = pad.current.id;
     pad = newWorking(pad);
     pad = recoverWorking(pad, originalId);
-    assert.equal(formatHmm(payTotal(pad.current)), "6:49");
-    pad = add(pad, "0:10");
+    assert.equal(formatHmm(payTotal(pad.current)), "3:11");
+    pad = subtract(pad, "0:10");
     pad = newWorking(pad);
     assert.equal(pad.history.length, 2);
     const original = pad.history.find((row) => row.id === originalId);
-    assert.equal(original?.pieces.length, 1);
+    assert.equal(original?.pieces.length, 2);
   });
 
   it("drops oldest when history exceeds 3", () => {
@@ -124,20 +99,17 @@ describe("history", () => {
     pad = add(pad, "4:00");
     pad = subtract(pad, "1:30");
     assert.equal(formatHmm(payTotal(pad.current)), "12:30");
-    assert.deepEqual(pad.current.pieces, [10 * 60, 4 * 60, -(1 * 60 + 30)]);
   });
 
-  it("same again and copy result", () => {
-    let pad = duty(emptyPad(), "8:00");
-    pad = add(pad, "3:00");
+  it("same again copies pieces", () => {
+    let pad = add(emptyPad(), "8:00");
+    pad = subtract(pad, "3:00");
     const sourceId = pad.current.id;
     pad = newWorking(pad);
     pad = sameAgain(pad, sourceId);
-    assert.equal(pad.current.dutyMinutes, 8 * 60);
     assert.notEqual(pad.current.id, sourceId);
     const text = formatCopy(pad.current);
-    assert.match(text, /Duty Pay: 8:00/);
-    assert.match(text, /Paid: 3:00/);
-    assert.match(text, /\+ 3:00/);
+    assert.match(text, /Amount Saved: 5:00/);
+    assert.match(text, /\+ 8:00/);
   });
 });
