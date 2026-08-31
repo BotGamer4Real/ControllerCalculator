@@ -169,3 +169,67 @@ select {
   border: 1px solid #1f4a5c;
   box-shadow: 0 0 24px rgba(20, 224, 196, 0.12);
 }
+
+.pad-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-width: 32rem;
+  margin-inline: auto;
+  overflow: hidden;
+}
+
+.pad-main {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pad-keys {
+  flex-shrink: 0;
+  border-top: 1px solid var(--line);
+}
+
+@media (orientation: landscape) {
+  .pad-shell {
+    max-width: none;
+    flex-direction: row;
+    gap: 0.75rem;
+  }
+
+  .pad-main {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .pad-keys {
+    display: flex;
+    width: min(42vw, 20rem);
+    flex-direction: column;
+    justify-content: center;
+    border-top: none;
+    border-left: 1px solid var(--line);
+    padding-top: 0.35rem;
+    padding-bottom: max(0.35rem, env(safe-area-inset-bottom));
+  }
+
+  .pad-keys .btn-key,
+  .pad-keys .btn-plus,
+  .pad-keys .btn-minus,
+  .pad-keys .btn-add,
+  .pad-keys .btn-reset {
+    min-height: 2.55rem;
+  }
+
+  .pad-keys .btn-plus,
+  .pad-keys .btn-minus,
+  .pad-keys .btn-add {
+    min-height: 2.75rem;
+  }
+
+  .display-glow.font-mono {
+    font-size: 2.25rem;
+  }
+}

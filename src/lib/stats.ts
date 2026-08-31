@@ -59,9 +59,11 @@ export function applyWorkingToStats(stats: Stats, working: Working, at = new Dat
   if (working.pieces.length < 1) return stats;
   let next = stats;
   if (!stats.countedIds.includes(working.id)) {
-    const countedIds = [...stats.countedIds, working.id].slice(-400);
+    const countedIds = [...stats.countedIds, working.id].slice(-80);
     const day = localDay(at);
-    const activeDays = stats.activeDays.includes(day) ? stats.activeDays : [...stats.activeDays, day];
+    const activeDays = stats.activeDays.includes(day)
+      ? stats.activeDays
+      : [...stats.activeDays, day].slice(-90);
     next = {
       ...next,
       lifetimeWorkings: stats.lifetimeWorkings + 1,
@@ -97,7 +99,7 @@ export function applyWorkingToStats(stats: Stats, working: Working, at = new Dat
 }
 
 export function mergeStats(local: Stats, cloud: Stats): Stats {
-  const counted = Array.from(new Set([...local.countedIds, ...cloud.countedIds])).slice(-400);
+  const counted = Array.from(new Set([...local.countedIds, ...cloud.countedIds])).slice(-80);
   const activeDays = Array.from(new Set([...local.activeDays, ...cloud.activeDays])).sort();
   const achievements: Stats["achievements"] = { ...cloud.achievements };
   for (const [id, at] of Object.entries(local.achievements) as [AchievementId, string][]) {

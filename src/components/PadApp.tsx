@@ -154,8 +154,51 @@ export function PadApp() {
     return <main className="mx-auto max-w-lg px-4 py-10 text-[var(--muted)]">Opening pad…</main>;
   }
 
+  const keypad = (
+    <section className="pad-keys px-0 pt-2" aria-label="Numpad">
+      <div className="mb-2 grid grid-cols-3 gap-2">
+        <button
+          type="button"
+          aria-label="Plus"
+          onClick={() => onOperator(1)}
+          className={`btn-plus text-2xl ${pendingSign === 1 ? "is-on" : ""}`}
+        >
+          +
+        </button>
+        <button
+          type="button"
+          aria-label="Minus"
+          onClick={() => onOperator(-1)}
+          className={`btn-minus text-2xl ${pendingSign === -1 ? "is-on" : ""}`}
+        >
+          −
+        </button>
+        <button type="button" aria-label="Equals" onClick={onCommit} className="btn-add text-2xl">
+          =
+        </button>
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((key) => (
+          <button key={key} type="button" className="btn-key" onClick={() => typeKey(key)}>
+            {key}
+          </button>
+        ))}
+        <button type="button" aria-label="Reset last piece" className="btn-reset" onClick={() => typeKey("Rst")}>
+          Rst
+        </button>
+        <button type="button" className="btn-key" onClick={() => typeKey("0")}>
+          0
+        </button>
+        <button type="button" className="btn-key" onClick={() => typeKey("⌫")}>
+          ⌫
+        </button>
+      </div>
+    </section>
+  );
+
   return (
-    <main className="mx-auto flex h-dvh max-w-lg flex-col overflow-hidden px-4 pb-[env(safe-area-inset-bottom)] pt-[max(0.75rem,env(safe-area-inset-top))]">
+    <main className="pad-shell px-4 pb-[env(safe-area-inset-bottom)] pt-[max(0.75rem,env(safe-area-inset-top))]">
+      <div className="pad-main">
       <header className="mb-3 flex shrink-0 items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--navy)]">Time duty calculator</p>
@@ -237,7 +280,7 @@ export function PadApp() {
         aria-live="polite"
       >
         <p className="text-sm font-semibold uppercase tracking-[0.16em]">{result.label}</p>
-        <p className="display-glow font-mono text-5xl font-semibold tabular-nums" aria-label={result.label}>
+        <p className="display-glow font-mono text-4xl font-semibold tabular-nums landscape:text-4xl portrait:text-5xl" aria-label={result.label}>
           {result.magnitudeHmm}
         </p>
       </section>
@@ -311,61 +354,8 @@ export function PadApp() {
         </section>
       </div>
 
-      <section
-        className="shrink-0 border-t border-[var(--line)] pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:hidden"
-        aria-label="Numpad"
-      >
-        <div className="mb-2 grid grid-cols-3 gap-2">
-          <button
-            type="button"
-            aria-label="Plus"
-            onClick={() => onOperator(1)}
-            className={`btn-plus text-2xl ${pendingSign === 1 ? "is-on" : ""}`}
-          >
-            +
-          </button>
-          <button
-            type="button"
-            aria-label="Minus"
-            onClick={() => onOperator(-1)}
-            className={`btn-minus text-2xl ${pendingSign === -1 ? "is-on" : ""}`}
-          >
-            −
-          </button>
-          <button type="button" aria-label="Equals" onClick={onCommit} className="btn-add text-2xl">
-            =
-          </button>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((key) => (
-            <button key={key} type="button" className="btn-key" onClick={() => typeKey(key)}>
-              {key}
-            </button>
-          ))}
-          <button type="button" aria-label="Reset last piece" className="btn-reset" onClick={() => typeKey("Rst")}>
-            Rst
-          </button>
-          <button type="button" className="btn-key" onClick={() => typeKey("0")}>
-            0
-          </button>
-          <button type="button" className="btn-key" onClick={() => typeKey("⌫")}>
-            ⌫
-          </button>
-        </div>
-      </section>
-
-      <div className="mt-2 hidden grid-cols-3 gap-2 md:grid">
-        <button type="button" aria-label="Plus" onClick={() => onOperator(1)} className={`btn-plus text-xl ${pendingSign === 1 ? "is-on" : ""}`}>
-          +
-        </button>
-        <button type="button" aria-label="Minus" onClick={() => onOperator(-1)} className={`btn-minus text-xl ${pendingSign === -1 ? "is-on" : ""}`}>
-          −
-        </button>
-        <button type="button" aria-label="Equals" onClick={onCommit} className="btn-add text-2xl">
-          =
-        </button>
       </div>
-
+      {keypad}
       <StatsPanel open={statsOpen} onClose={() => setStatsOpen(false)} stats={store.stats} />
     </main>
   );

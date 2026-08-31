@@ -35,6 +35,7 @@ export default function GuidePage() {
           New starts a fresh working. None of those ask for confirmation.
         </p>
         <p>Example: 10:00 + then 6:49 − then = → Amount Saved 3:11.</p>
+        <p>In landscape the keypad sits on the right; tape and history stay on the left.</p>
       </section>
 
       <section className="mt-8 space-y-3 text-sm leading-6">
