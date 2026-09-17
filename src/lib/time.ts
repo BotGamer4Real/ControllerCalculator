@@ -74,6 +74,34 @@ export function formatHmm(totalMinutes: number): string {
   return `${sign}${hours}:${minutes.toString().padStart(2, "0")}`;
 }
 
+/** Clock display: 6:00 → 06:00. */
+export function formatClockHmm(totalMinutes: number): string {
+  const abs = Math.abs(totalMinutes);
+  const hours = Math.floor(abs / 60);
+  const minutes = abs % 60;
+  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+}
+
+export function hmmMinutesComplete(raw: string): boolean {
+  const digits = raw.replace(/\D/g, "");
+  return digits.length >= 4 && /:\d{2}$/.test(raw.trim());
+}
+
+const CLOCK_RANGE = "Use a clock time (0:00–23:59).";
+
+export function parseClockHmm(raw: string): ParseResult {
+  const parsed = parseHmm(raw);
+  if (!parsed.ok) return parsed;
+  if (parsed.minutes >= 24 * 60) return { ok: false, error: CLOCK_RANGE };
+  return parsed;
+}
+
+/** Finish before start counts past midnight (22:00 to 06:00 = 8:00). Same times = 0:00. */
+export function elapsedClockMinutes(startMinutes: number, finishMinutes: number): number {
+  const delta = finishMinutes - startMinutes;
+  return delta >= 0 ? delta : delta + 24 * 60;
+}
+
 export function sumMinutes(pieces: number[]): number {
   return pieces.reduce((acc, piece) => acc + piece, 0);
 }

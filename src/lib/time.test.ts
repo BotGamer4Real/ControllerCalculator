@@ -1,6 +1,16 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { backspaceHmm, formatHmm, liveHmm, parseHmm, resultFromTotal } from "./time";
+import {
+  backspaceHmm,
+  elapsedClockMinutes,
+  formatClockHmm,
+  formatHmm,
+  hmmMinutesComplete,
+  liveHmm,
+  parseClockHmm,
+  parseHmm,
+  resultFromTotal,
+} from "./time";
 
 describe("parseHmm", () => {
   it("accepts 6:49, 06:49, 649, and 6.49 as a colon alias", () => {
@@ -63,5 +73,15 @@ describe("format and delta", () => {
     assert.equal(delta.kind, "extra");
     assert.equal(delta.label, "Additional Cost");
     assert.equal(delta.magnitudeHmm, "0:35");
+  });
+
+  it("clock helpers pad hours and wrap overnight", () => {
+    assert.equal(formatClockHmm(6 * 60), "06:00");
+    assert.equal(hmmMinutesComplete("6:00"), false);
+    assert.equal(hmmMinutesComplete("06:00"), true);
+    assert.equal(hmmMinutesComplete("10:30"), true);
+    assert.equal(hmmMinutesComplete("6:0"), false);
+    assert.equal(parseClockHmm("24:00").ok, false);
+    assert.equal(elapsedClockMinutes(22 * 60, 6 * 60), 8 * 60);
   });
 });

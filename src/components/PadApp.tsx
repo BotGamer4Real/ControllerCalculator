@@ -3,11 +3,23 @@
 import { Capacitor } from "@capacitor/core";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { StatsPanel } from "@/components/StatsPanel";
-import { applyWorkingToStats, noteRecovered } from "@/lib/stats";
-import { emptyStore, loadStore, saveStore, type StoredState } from "@/lib/storage";
-import { backspaceHmm, formatHmm, liveHmm } from "@/lib/time";
+import {
+  clearDrivePieces,
+  commitDrivePiece,
+  driveHistoryLabel,
+  driveResult,
+  formatDriveTapePiece,
+  newDriveWorking,
+  recoverDriveWorking,
+  runningDriveSubtotals,
+  sameAgainDrive,
+  undoLastDrive,
+} from "@/lib/drive";
+import { applyDriveToStats, applyWorkingToStats, noteRecovered } from "@/lib/stats";
+import { emptyStore, loadStore, saveStore, type DriveField, type PadMode, type StoredState } from "@/lib/storage";
+import { backspaceHmm, formatHmm, hmmMinutesComplete, liveHmm } from "@/lib/time";
 import {
   addPiece,
   clearPieces,
@@ -32,6 +44,8 @@ export function PadApp() {
   const [pendingSign, setPendingSign] = useState<PieceSign>(1);
   const [coarsePointer, setCoarsePointer] = useState(false);
   const payRef = useRef<HTMLInputElement>(null);
+  const startRef = useRef<HTMLInputElement>(null);
+  const finishRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setStore(loadStore());
@@ -52,9 +66,36 @@ export function PadApp() {
     if (ready) saveStore(store);
   }, [ready, store]);
 
+  useEffect(() => {
+    if (!ready || statsOpen) return;
+    if (store.mode === "duty") {
+      payRef.current?.focus();
+      return;
+    }
+    if (store.driveField === "finish") finishRef.current?.focus();
+    else startRef.current?.focus();
+  }, [ready, statsOpen, store.mode, store.driveField]);
+
+  const isDrive = store.mode === "drive";
   const pad = store.pad;
-  const result = workingResult(pad.current);
-  const subtotals = useMemo(() => runningSubtotals(pad.current.pieces), [pad.current.pieces]);
+  const drivePad = store.drivePad;
+  const result = isDrive ? driveResult(drivePad.current) : workingResult(pad.current);
+  const dutySubtotals = useMemo(() => runningSubtotals(pad.current.pieces), [pad.current.pieces]);
+  const driveSubtotals = useMemo(
+    () => runningDriveSubtotals(drivePad.current.pieces),
+    [drivePad.current.pieces],
+  );
+
+  function setMode(mode: PadMode) {
+    setPayError(null);
+    setPieceWarning(false);
+    setPendingSign(1);
+    setStore((prev) => ({ ...prev, mode, driveField: mode === "drive" ? "start" : prev.driveField }));
+  }
+
+  function setDriveField(field: DriveField) {
+    setStore((prev) => (prev.driveField === field ? prev : { ...prev, driveField: field }));
+  }
 
   function commitPay(sign: PieceSign): boolean {
     const outcome = sign === 1 ? addPiece(store.pad, store.payDraft) : subtractPiece(store.pad, store.payDraft);
@@ -74,7 +115,41 @@ export function PadApp() {
     return true;
   }
 
+  function commitDrive(sign: PieceSign): boolean {
+    const outcome = commitDrivePiece(store.drivePad, store.startDraft, store.finishDraft, sign);
+    if (!outcome.ok) {
+      setPayError(outcome.error);
+      return false;
+    }
+    setPayError(null);
+    setPieceWarning(outcome.warning);
+    setStore((prev) => ({
+      ...prev,
+      drivePad: outcome.pad,
+      startDraft: "",
+      finishDraft: "",
+      driveField: "start",
+      stats: applyDriveToStats(prev.stats, outcome.pad.current),
+    }));
+    return true;
+  }
+
   function onOperator(nextSign: PieceSign) {
+    if (isDrive) {
+      const hasStart = Boolean(store.startDraft.trim());
+      const hasFinish = Boolean(store.finishDraft.trim());
+      if (hasStart || hasFinish) {
+        if (hasStart && !hasFinish) {
+          setPayError(null);
+          setDriveField("finish");
+          setPendingSign(nextSign);
+          return;
+        }
+        if (!commitDrive(pendingSign)) return;
+      }
+      setPendingSign(nextSign);
+      return;
+    }
     if (store.payDraft.trim()) {
       if (!commitPay(pendingSign)) return;
     }
@@ -84,28 +159,72 @@ export function PadApp() {
   }
 
   function onCommit() {
+    if (isDrive) {
+      if (!commitDrive(pendingSign)) return;
+      setPendingSign(1);
+      return;
+    }
     if (!commitPay(pendingSign)) return;
     setPendingSign(1);
   }
 
   function onReset() {
     setPayError(null);
+    if (isDrive) {
+      setStore((prev) => ({ ...prev, drivePad: undoLastDrive(prev.drivePad) }));
+      return;
+    }
     setStore((prev) => ({ ...prev, pad: undoLast(prev.pad) }));
+  }
+
+  function onClear() {
+    setPayError(null);
+    if (isDrive) {
+      setStore((prev) => ({ ...prev, drivePad: clearDrivePieces(prev.drivePad) }));
+      return;
+    }
+    setStore((prev) => ({ ...prev, pad: clearPieces(prev.pad) }));
   }
 
   function onNew() {
     setPayError(null);
     setPieceWarning(false);
+    setPendingSign(1);
+    if (isDrive) {
+      setStore((prev) => ({
+        ...prev,
+        drivePad: newDriveWorking(prev.drivePad),
+        startDraft: "",
+        finishDraft: "",
+        driveField: "start",
+      }));
+      return;
+    }
     setStore((prev) => ({
       ...prev,
       pad: newWorking(prev.pad),
       payDraft: "",
     }));
-    setPendingSign(1);
     payRef.current?.focus();
   }
 
   function onRecover(id: string) {
+    setPayError(null);
+    setPendingSign(1);
+    if (isDrive) {
+      setStore((prev) => {
+        const next = recoverDriveWorking(prev.drivePad, id);
+        return {
+          ...prev,
+          drivePad: next,
+          startDraft: "",
+          finishDraft: "",
+          driveField: "start",
+          stats: noteRecovered(prev.stats),
+        };
+      });
+      return;
+    }
     setStore((prev) => {
       const next = recoverWorking(prev.pad, id);
       return {
@@ -115,25 +234,25 @@ export function PadApp() {
         stats: noteRecovered(prev.stats),
       };
     });
-    setPayError(null);
-    setPendingSign(1);
   }
 
   function onSameAgain(id: string) {
+    setPayError(null);
+    setPendingSign(1);
+    if (isDrive) {
+      setStore((prev) => {
+        const next = sameAgainDrive(prev.drivePad, id);
+        return { ...prev, drivePad: next, startDraft: "", finishDraft: "", driveField: "start" };
+      });
+      return;
+    }
     setStore((prev) => {
       const next = sameAgain(prev.pad, id);
       return { ...prev, pad: next, payDraft: "" };
     });
-    setPayError(null);
-    setPendingSign(1);
   }
 
   function typeKey(key: string) {
-    if (key === "⌫") {
-      setPayError(null);
-      setStore((s) => ({ ...s, payDraft: backspaceHmm(s.payDraft) }));
-      return;
-    }
     if (key === "Rst") {
       onReset();
       return;
@@ -146,8 +265,55 @@ export function PadApp() {
       onCommit();
       return;
     }
+    if (isDrive) {
+      const field = store.driveField;
+      if (key === "⌫") {
+        setPayError(null);
+        setStore((s) => ({
+          ...s,
+          startDraft: field === "start" ? backspaceHmm(s.startDraft) : s.startDraft,
+          finishDraft: field === "finish" ? backspaceHmm(s.finishDraft) : s.finishDraft,
+        }));
+        return;
+      }
+      setPayError(null);
+      setStore((s) => {
+        const current = field === "start" ? s.startDraft : s.finishDraft;
+        const next = liveHmm(current + key);
+        const jump = field === "start" && hmmMinutesComplete(next);
+        return {
+          ...s,
+          startDraft: field === "start" ? next : s.startDraft,
+          finishDraft: field === "finish" ? next : s.finishDraft,
+          driveField: jump ? "finish" : s.driveField,
+        };
+      });
+      return;
+    }
+    if (key === "⌫") {
+      setPayError(null);
+      setStore((s) => ({ ...s, payDraft: backspaceHmm(s.payDraft) }));
+      return;
+    }
     setPayError(null);
     setStore((s) => ({ ...s, payDraft: liveHmm(s.payDraft + key) }));
+  }
+
+  function onFieldKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "+" || event.code === "NumpadAdd") {
+      event.preventDefault();
+      onOperator(1);
+      return;
+    }
+    if (event.key === "-" || event.code === "NumpadSubtract") {
+      event.preventDefault();
+      onOperator(-1);
+      return;
+    }
+    if (event.key === "Enter" || event.key === "=") {
+      event.preventDefault();
+      onCommit();
+    }
   }
 
   if (!ready) {
@@ -196,6 +362,19 @@ export function PadApp() {
     </section>
   );
 
+  const signBadge = (
+    <span
+      className={`flex min-h-12 w-10 shrink-0 items-center justify-center rounded-l-xl border font-mono text-2xl font-semibold ${
+        pendingSign === 1
+          ? "border-[#14e0c4] bg-[#0d2a32] text-[#14e0c4]"
+          : "border-[#ff7a4a] bg-[#2a1610] text-[#ff7a4a]"
+      }`}
+      aria-hidden="true"
+    >
+      {pendingSign === 1 ? "+" : "−"}
+    </span>
+  );
+
   return (
     <main className="pad-shell px-4 pb-[env(safe-area-inset-bottom)] pt-[max(0.75rem,env(safe-area-inset-top))]">
       <div className="pad-main">
@@ -214,59 +393,129 @@ export function PadApp() {
         </nav>
       </header>
 
+      <div
+        className="mode-switch mb-3 shrink-0"
+        role="tablist"
+        aria-label="Calculation type"
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={!isDrive}
+          className={!isDrive ? "is-on" : ""}
+          onClick={() => setMode("duty")}
+        >
+          Duty
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={isDrive}
+          className={isDrive ? "is-on" : ""}
+          onClick={() => setMode("drive")}
+        >
+          Drive Time
+        </button>
+      </div>
+
       <div className="shrink-0">
-        <label className="text-sm font-semibold tracking-wide text-[var(--navy)]" htmlFor="pay">
-          Pay time
-        </label>
-        <div className="mt-1 flex">
-          <span
-            className={`flex min-h-12 w-12 shrink-0 items-center justify-center rounded-l-xl border font-mono text-2xl font-semibold ${
-              pendingSign === 1
-                ? "border-[#14e0c4] bg-[#0d2a32] text-[#14e0c4]"
-                : "border-[#ff7a4a] bg-[#2a1610] text-[#ff7a4a]"
-            }`}
-            aria-hidden="true"
-          >
-            {pendingSign === 1 ? "+" : "−"}
-          </span>
-          <input
-            id="pay"
-            ref={payRef}
-            name="pay"
-            aria-label="Pay time"
-            inputMode={coarsePointer ? "none" : "decimal"}
-            readOnly={coarsePointer}
-            autoComplete="off"
-            placeholder="123 → 1:23"
-            value={store.payDraft}
-            onChange={(event) => {
-              setPayError(null);
-              setStore((s) => ({ ...s, payDraft: liveHmm(event.target.value) }));
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "+" || event.code === "NumpadAdd") {
-                event.preventDefault();
-                onOperator(1);
-                return;
-              }
-              if (event.key === "-" || event.code === "NumpadSubtract") {
-                event.preventDefault();
-                onOperator(-1);
-                return;
-              }
-              if (event.key === "Enter" || event.key === "=") {
-                event.preventDefault();
-                onCommit();
-              }
-            }}
-            className="field-on field-glow min-h-12 w-full rounded-r-xl rounded-l-none px-3 font-mono text-lg"
-          />
-        </div>
-        {payError ? <p className="mt-1 text-sm text-[var(--extra)]">{payError}</p> : null}
-        {pieceWarning ? (
-          <p className="mt-1 text-sm text-[var(--muted)]">This working has 20+ pieces. You can still add more.</p>
-        ) : null}
-        <p className="mt-1 text-xs text-[var(--muted)]">Enter Duty Pay first, then subtract what you paid.</p>
+        {isDrive ? (
+          <>
+            <div className="drive-labels">
+              <span>Start time</span>
+              <span>Finish time</span>
+            </div>
+            <div className="mt-1 flex">
+              {signBadge}
+              <input
+                id="drive-start"
+                ref={startRef}
+                name="drive-start"
+                aria-label="Start time"
+                inputMode={coarsePointer ? "none" : "decimal"}
+                readOnly={coarsePointer}
+                autoComplete="off"
+                placeholder="06:00"
+                value={store.startDraft}
+                onPointerDown={() => setDriveField("start")}
+                onFocus={() => setDriveField("start")}
+                onChange={(event) => {
+                  setPayError(null);
+                  const next = liveHmm(event.target.value);
+                  setStore((s) => ({
+                    ...s,
+                    startDraft: next,
+                    driveField: hmmMinutesComplete(next) ? "finish" : "start",
+                  }));
+                }}
+                onKeyDown={onFieldKeyDown}
+                className={`field-glow min-h-12 min-w-0 flex-1 rounded-none px-2 font-mono text-lg ${
+                  store.driveField === "start" ? "field-on" : ""
+                }`}
+              />
+              <span className="drive-dash" aria-hidden="true">
+                −
+              </span>
+              <input
+                id="drive-finish"
+                ref={finishRef}
+                name="drive-finish"
+                aria-label="Finish time"
+                inputMode={coarsePointer ? "none" : "decimal"}
+                readOnly={coarsePointer}
+                autoComplete="off"
+                placeholder="8:34"
+                value={store.finishDraft}
+                onPointerDown={() => setDriveField("finish")}
+                onFocus={() => setDriveField("finish")}
+                onChange={(event) => {
+                  setPayError(null);
+                  setStore((s) => ({ ...s, finishDraft: liveHmm(event.target.value), driveField: "finish" }));
+                }}
+                onKeyDown={onFieldKeyDown}
+                className={`field-glow min-h-12 min-w-0 flex-1 rounded-r-xl rounded-l-none px-2 font-mono text-lg ${
+                  store.driveField === "finish" ? "field-on" : ""
+                }`}
+              />
+            </div>
+            {payError ? <p className="mt-1 text-sm text-[var(--extra)]">{payError}</p> : null}
+            {pieceWarning ? (
+              <p className="mt-1 text-sm text-[var(--muted)]">This working has 20+ pieces. You can still add more.</p>
+            ) : null}
+            <p className="mt-1 text-xs text-[var(--muted)]">Start and finish, then + or −. Each pair adds to the tape.</p>
+          </>
+        ) : (
+          <>
+            <label className="text-sm font-semibold tracking-wide text-[var(--navy)]" htmlFor="pay">
+              Pay time
+            </label>
+            <div className="mt-1 flex">
+              {signBadge}
+              <input
+                id="pay"
+                ref={payRef}
+                name="pay"
+                aria-label="Pay time"
+                inputMode={coarsePointer ? "none" : "decimal"}
+                readOnly={coarsePointer}
+                autoComplete="off"
+                placeholder="123 → 1:23"
+                value={store.payDraft}
+                onChange={(event) => {
+                  setPayError(null);
+                  setStore((s) => ({ ...s, payDraft: liveHmm(event.target.value) }));
+                }}
+                onKeyDown={onFieldKeyDown}
+                className="field-on field-glow min-h-12 w-full rounded-r-xl rounded-l-none px-3 font-mono text-lg"
+              />
+            </div>
+            {payError ? <p className="mt-1 text-sm text-[var(--extra)]">{payError}</p> : null}
+            {pieceWarning ? (
+              <p className="mt-1 text-sm text-[var(--muted)]">This working has 20+ pieces. You can still add more.</p>
+            ) : null}
+            <p className="mt-1 text-xs text-[var(--muted)]">Enter Duty Pay first, then subtract what you paid.</p>
+          </>
+        )}
       </div>
 
       <section
@@ -281,13 +530,13 @@ export function PadApp() {
       >
         <p className="text-sm font-semibold uppercase tracking-[0.16em]">{result.label}</p>
         <p className="display-glow font-mono text-4xl font-semibold tabular-nums landscape:text-4xl portrait:text-5xl" aria-label={result.label}>
-          {result.magnitudeHmm}
+          {isDrive && result.kind === "extra" ? `− ${result.magnitudeHmm}` : result.magnitudeHmm}
         </p>
       </section>
 
       <div className="mt-3 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-3">
         <div className="grid grid-cols-2 gap-3">
-          <button type="button" aria-label="Clear pieces" onClick={() => setStore((prev) => ({ ...prev, pad: clearPieces(prev.pad) }))} className="btn-loud-clear">
+          <button type="button" aria-label="Clear pieces" onClick={onClear} className="btn-loud-clear">
             Clear
           </button>
           <button type="button" aria-label="New working" onClick={onNew} className="btn-loud-new">
@@ -297,7 +546,22 @@ export function PadApp() {
 
         <section className="mt-4" aria-label="Tape">
           <h2 className="text-sm font-semibold">Tape</h2>
-          {pad.current.pieces.length === 0 ? (
+          {isDrive ? (
+            drivePad.current.pieces.length === 0 ? (
+              <p className="mt-2 text-sm text-[var(--muted)]">No pieces yet. Enter start and finish, then +.</p>
+            ) : (
+              <ol className="panel-glow mt-2 divide-y divide-[var(--line)] rounded-xl">
+                {drivePad.current.pieces.map((piece, index) => (
+                  <li key={`${index}-${piece.startMinutes}-${piece.finishMinutes}-${piece.minutes}`} className="flex min-h-11 items-center justify-between gap-2 px-3 font-mono text-sm">
+                    <span>
+                      {index + 1}. {formatDriveTapePiece(piece)}
+                    </span>
+                    <span className="shrink-0 text-[var(--muted)]">{formatHmm(driveSubtotals[index] ?? piece.minutes)}</span>
+                  </li>
+                ))}
+              </ol>
+            )
+          ) : pad.current.pieces.length === 0 ? (
             <p className="mt-2 text-sm text-[var(--muted)]">No pieces yet. Enter Duty Pay, then subtract paid time.</p>
           ) : (
             <ol className="panel-glow mt-2 divide-y divide-[var(--line)] rounded-xl">
@@ -306,7 +570,7 @@ export function PadApp() {
                   <span>
                     {index + 1}. {formatTapePiece(piece)}
                   </span>
-                  <span className="text-[var(--muted)]">{formatHmm(subtotals[index] ?? piece)}</span>
+                  <span className="text-[var(--muted)]">{formatHmm(dutySubtotals[index] ?? piece)}</span>
                 </li>
               ))}
             </ol>
@@ -316,7 +580,43 @@ export function PadApp() {
         <section className="mt-4" aria-label="History">
           <h2 className="text-sm font-semibold">History</h2>
           <p className="text-xs text-[var(--muted)]">Last 3 workings. Tap a row to recover.</p>
-          {pad.history.length === 0 ? (
+          {isDrive ? (
+            drivePad.history.length === 0 ? (
+              <p className="mt-2 text-sm text-[var(--muted)]">No workings yet.</p>
+            ) : (
+              <ul className="mt-2 space-y-2">
+                {drivePad.history.map((row) => {
+                  const label = driveHistoryLabel(row);
+                  const when = new Date(row.updatedAt);
+                  return (
+                    <li key={row.id} className="panel-glow rounded-xl p-3">
+                      <button type="button" className="block w-full text-left" onClick={() => onRecover(row.id)}>
+                        <p className="font-mono text-sm">
+                          Drive {label.total} · {label.pieces} pcs
+                        </p>
+                        <p className="text-xs text-[var(--muted)]">
+                          {when.toLocaleString(undefined, {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            day: "numeric",
+                            month: "short",
+                          })}
+                        </p>
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Same again"
+                        className="btn-action mt-2 px-3"
+                        onClick={() => onSameAgain(row.id)}
+                      >
+                        Same again
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )
+          ) : pad.history.length === 0 ? (
             <p className="mt-2 text-sm text-[var(--muted)]">No workings yet.</p>
           ) : (
             <ul className="mt-2 space-y-2">

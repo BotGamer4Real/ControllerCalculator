@@ -1,3 +1,4 @@
+import type { DriveWorking } from "./drive";
 import type { Working } from "./working";
 import { payTotal, workingResult } from "./working";
 
@@ -90,6 +91,38 @@ export function applyWorkingToStats(stats: Stats, working: Working, at = new Dat
   next = unlock(next, "first_working", at);
   if (delta.kind === "saving") next = unlock(next, "first_saving", at);
   if (delta.kind === "extra") next = unlock(next, "first_extra", at);
+  if (working.pieces.length >= 3) next = unlock(next, "first_split", at);
+  if (next.lifetimeWorkings >= 10) next = unlock(next, "history_filled", at);
+  if (next.lifetimeWorkings >= 50) next = unlock(next, "lifetime_50", at);
+  if (next.lifetimeWorkings >= 200) next = unlock(next, "lifetime_200", at);
+  if (next.activeDays.length >= 7) next = unlock(next, "seven_days", at);
+  return next;
+}
+
+export function applyDriveToStats(stats: Stats, working: DriveWorking, at = new Date()): Stats {
+  if (working.pieces.length < 1) return stats;
+  let next = stats;
+  if (!stats.countedIds.includes(working.id)) {
+    const countedIds = [...stats.countedIds, working.id].slice(-80);
+    const day = localDay(at);
+    const activeDays = stats.activeDays.includes(day)
+      ? stats.activeDays
+      : [...stats.activeDays, day].slice(-90);
+    next = {
+      ...next,
+      lifetimeWorkings: stats.lifetimeWorkings + 1,
+      countedIds,
+      activeDays,
+    };
+  }
+  next = {
+    ...next,
+    records: {
+      ...next.records,
+      mostPieces: Math.max(next.records.mostPieces, working.pieces.length),
+    },
+  };
+  next = unlock(next, "first_working", at);
   if (working.pieces.length >= 3) next = unlock(next, "first_split", at);
   if (next.lifetimeWorkings >= 10) next = unlock(next, "history_filled", at);
   if (next.lifetimeWorkings >= 50) next = unlock(next, "lifetime_50", at);

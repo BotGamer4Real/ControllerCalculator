@@ -192,6 +192,54 @@ select {
   border-top: 1px solid var(--line);
 }
 
+.mode-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid #245066;
+  border-radius: 999px;
+  background: #08141c;
+}
+
+.mode-switch button {
+  min-height: 2.15rem;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.mode-switch button.is-on {
+  background: #0d2a32;
+  color: #14e0c4;
+  box-shadow: var(--glow-teal);
+}
+
+.drive-labels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.75rem;
+  padding-left: 2.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--navy);
+}
+
+.drive-dash {
+  display: flex;
+  align-items: center;
+  padding: 0 0.3rem;
+  color: var(--muted);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
 @media (orientation: landscape) {
   .pad-shell {
     max-width: none;

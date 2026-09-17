@@ -39,6 +39,16 @@ export default function GuidePage() {
       </section>
 
       <section className="mt-8 space-y-3 text-sm leading-6">
+        <h2 className="text-lg font-semibold">Drive Time</h2>
+        <p>
+          Use the switch at the top for Drive Time. Type a start and a finish. The pad stores that pair as hours and
+          minutes, then + or − starts the next one. Example: 06:00 to 8:34 is 2:34, then 09:30 to 12:00 is 2:30, total
+          Drive Time 5:04.
+        </p>
+        <p>If finish is earlier than start, it counts past midnight (22:00 to 06:00 is 8:00).</p>
+      </section>
+
+      <section className="mt-8 space-y-3 text-sm leading-6">
         <h2 className="text-lg font-semibold">History</h2>
         <p>
           Last 3 workings, newest first. Tap a row to recover it. If you then change it, the next archive writes a new
