@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { elapsedClockMinutes, formatClockHmm, parseClockHmm } from "./time";
 import {
+  clearDrivePieces,
   commitDrivePiece,
   driveResult,
   driveTotal,
@@ -80,6 +81,15 @@ describe("drive pad", () => {
   it("needs both start and finish", () => {
     assert.equal(commitDrivePiece(emptyDrivePad(), "", "8:34", 1).ok, false);
     assert.equal(commitDrivePiece(emptyDrivePad(), "06:00", "", 1).ok, false);
+  });
+
+  it("clear discards the current working and does not keep it in history", () => {
+    let pad = commit(emptyDrivePad(), "06:00", "8:34");
+    const droppedId = pad.current.id;
+    pad = clearDrivePieces(pad);
+    assert.equal(pad.current.pieces.length, 0);
+    assert.notEqual(pad.current.id, droppedId);
+    assert.equal(pad.history.some((row) => row.id === droppedId), false);
   });
 
   it("archives on new working", () => {

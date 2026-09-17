@@ -142,8 +142,13 @@ export function undoLast(pad: PadSnapshot, at = new Date()): PadSnapshot {
 }
 
 export function clearPieces(pad: PadSnapshot, at = new Date()): PadSnapshot {
-  if (pad.current.pieces.length === 0) return pad;
-  return markDirty({ ...pad, current: touch({ ...pad.current, pieces: [] }, at) });
+  const currentId = pad.current.id;
+  return {
+    current: emptyWorking(at),
+    history: pad.history.filter((row) => row.id !== currentId),
+    recoveredFromId: null,
+    dirtySinceRecover: false,
+  };
 }
 
 export function newWorking(pad: PadSnapshot, at = new Date()): PadSnapshot {

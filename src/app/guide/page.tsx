@@ -31,8 +31,9 @@ export default function GuidePage() {
       <section className="mt-8 space-y-3 text-sm leading-6">
         <h2 className="text-lg font-semibold">How to add and subtract</h2>
         <p>
-          Type a time, then + or −. Equals finishes the last piece. Rst undoes the last piece. Clear empties the tape.
-          New starts a fresh working. None of those ask for confirmation.
+          Type a time, then + or −. Equals finishes the last piece. Rst clears the field you are typing in, without
+          touching the tape. Clear wipes the current working and does not save it. New archives the working and starts
+          a blank pad. None of those ask for confirmation.
         </p>
         <p>Example: 10:00 + then 6:49 − then = → Amount Saved 3:11.</p>
         <p>In landscape the keypad sits on the right; tape and history stay on the left.</p>

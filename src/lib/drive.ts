@@ -114,8 +114,13 @@ export function undoLastDrive(pad: DrivePadSnapshot, at = new Date()): DrivePadS
 }
 
 export function clearDrivePieces(pad: DrivePadSnapshot, at = new Date()): DrivePadSnapshot {
-  if (pad.current.pieces.length === 0) return pad;
-  return markDirty({ ...pad, current: touch({ ...pad.current, pieces: [] }, at) });
+  const currentId = pad.current.id;
+  return {
+    current: emptyDriveWorking(at),
+    history: pad.history.filter((row) => row.id !== currentId),
+    recoveredFromId: null,
+    dirtySinceRecover: false,
+  };
 }
 
 export function newDriveWorking(pad: DrivePadSnapshot, at = new Date()): DrivePadSnapshot {

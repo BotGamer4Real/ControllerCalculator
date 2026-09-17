@@ -4,6 +4,7 @@ import { formatHmm } from "./time";
 import {
   HISTORY_LIMIT,
   addPiece,
+  clearPieces,
   emptyPad,
   formatCopy,
   newWorking,
@@ -99,6 +100,16 @@ describe("history", () => {
     pad = add(pad, "4:00");
     pad = subtract(pad, "1:30");
     assert.equal(formatHmm(payTotal(pad.current)), "12:30");
+  });
+
+  it("clear discards the current working and does not keep it in history", () => {
+    let pad = add(emptyPad(), "10:00");
+    pad = subtract(pad, "6:49");
+    const droppedId = pad.current.id;
+    pad = clearPieces(pad);
+    assert.equal(pad.current.pieces.length, 0);
+    assert.notEqual(pad.current.id, droppedId);
+    assert.equal(pad.history.some((row) => row.id === droppedId), false);
   });
 
   it("same again copies pieces", () => {

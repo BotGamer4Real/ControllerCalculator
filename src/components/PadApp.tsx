@@ -15,8 +15,8 @@ import {
   recoverDriveWorking,
   runningDriveSubtotals,
   sameAgainDrive,
-  undoLastDrive,
 } from "@/lib/drive";
+import { APP_VERSION } from "@/lib/appVersion";
 import { applyDriveToStats, applyWorkingToStats, noteRecovered } from "@/lib/stats";
 import { emptyStore, loadStore, saveStore, type DriveField, type PadMode, type StoredState } from "@/lib/storage";
 import { backspaceHmm, formatHmm, hmmMinutesComplete, liveHmm } from "@/lib/time";
@@ -30,7 +30,6 @@ import {
   runningSubtotals,
   sameAgain,
   subtractPiece,
-  undoLast,
   workingResult,
   type PieceSign,
 } from "@/lib/working";
@@ -171,19 +170,35 @@ export function PadApp() {
   function onReset() {
     setPayError(null);
     if (isDrive) {
-      setStore((prev) => ({ ...prev, drivePad: undoLastDrive(prev.drivePad) }));
+      setStore((prev) => ({
+        ...prev,
+        startDraft: prev.driveField === "start" ? "" : prev.startDraft,
+        finishDraft: prev.driveField === "finish" ? "" : prev.finishDraft,
+      }));
       return;
     }
-    setStore((prev) => ({ ...prev, pad: undoLast(prev.pad) }));
+    setStore((prev) => ({ ...prev, payDraft: "" }));
   }
 
   function onClear() {
     setPayError(null);
+    setPieceWarning(false);
+    setPendingSign(1);
     if (isDrive) {
-      setStore((prev) => ({ ...prev, drivePad: clearDrivePieces(prev.drivePad) }));
+      setStore((prev) => ({
+        ...prev,
+        drivePad: clearDrivePieces(prev.drivePad),
+        startDraft: "",
+        finishDraft: "",
+        driveField: "start",
+      }));
       return;
     }
-    setStore((prev) => ({ ...prev, pad: clearPieces(prev.pad) }));
+    setStore((prev) => ({
+      ...prev,
+      pad: clearPieces(prev.pad),
+      payDraft: "",
+    }));
   }
 
   function onNew() {
@@ -349,7 +364,7 @@ export function PadApp() {
             {key}
           </button>
         ))}
-        <button type="button" aria-label="Reset last piece" className="btn-reset" onClick={() => typeKey("Rst")}>
+        <button type="button" aria-label="Clear current field" className="btn-reset" onClick={() => typeKey("Rst")}>
           Rst
         </button>
         <button type="button" className="btn-key" onClick={() => typeKey("0")}>
@@ -382,6 +397,7 @@ export function PadApp() {
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--navy)]">Time duty calculator</p>
           <h1 className="display-glow text-2xl font-semibold tracking-tight sm:text-3xl">Duty Pad</h1>
+          <p className="mt-0.5 font-mono text-[11px] text-[var(--muted)]">v{APP_VERSION}</p>
         </div>
         <nav className="flex shrink-0 flex-wrap justify-end gap-1">
           <button type="button" className="btn-action min-h-11 px-3" onClick={() => setStatsOpen(true)}>
@@ -536,7 +552,7 @@ export function PadApp() {
 
       <div className="mt-3 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-3">
         <div className="grid grid-cols-2 gap-3">
-          <button type="button" aria-label="Clear pieces" onClick={onClear} className="btn-loud-clear">
+          <button type="button" aria-label="Clear working" onClick={onClear} className="btn-loud-clear">
             Clear
           </button>
           <button type="button" aria-label="New working" onClick={onNew} className="btn-loud-new">
